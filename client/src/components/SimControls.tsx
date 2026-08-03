@@ -49,7 +49,7 @@ export const SimControls: React.FC<SimControlsProps> = ({
       {/* Surge Multiplier Slider */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem" }}>
         <span style={{ color: surge > 1.0 ? "#F87171" : "var(--text-secondary)", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-          <Zap size={14} /> Uber Surge: {surge.toFixed(1)}x
+          <Zap size={14} /> Surge Multiplier: {surge.toFixed(1)}x
         </span>
         <input
           type="range"
