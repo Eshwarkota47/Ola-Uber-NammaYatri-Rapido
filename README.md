@@ -1,10 +1,11 @@
 # FarePulse — Ride Fare Aggregator
 
-A real-time **3-way ride fare comparison** web app for **Bengaluru**, comparing fares across:
+A real-time **4-way ride fare comparison** web app for **Bengaluru**, comparing fares across:
 
 - 🟡 **Namma Yatri** — Screenshot-calibrated rate card (₹36 base, ₹18/km, IST Night Surcharge)
 - 🔵 **Uber** — Dynamic pricing with surge, booking fees, and time-based rates
 - 🟢 **Ola** — Distance-slab pricing with 5% GST taxes
+- 🟠 **Rapido** — Per-km + per-min rate card (calibrated to real Rapido app fares)
 
 ## Features
 
@@ -66,7 +67,8 @@ cabs/
 │       ├── engines/
 │       │   ├── nammaYatri.ts   # Namma Yatri fare engine
 │       │   ├── uber.ts         # Uber fare engine
-│       │   └── ola.ts          # Ola fare engine
+│       │   ├── ola.ts          # Ola fare engine
+│       │   └── rapido.ts       # Rapido fare engine
 │       ├── lib/
 │       │   ├── googleMaps.ts   # Google Places + Directions API
 │       │   ├── geo.ts          # Haversine distance fallback
@@ -96,3 +98,4 @@ cabs/
 | Namma Yatri | Auto Priority | ₹221–₹231 |
 | Uber | Uber Auto | ~₹186 |
 | Ola | Ola Auto | ~₹198 |
+| Rapido | Rapido Auto | ~₹196 |
