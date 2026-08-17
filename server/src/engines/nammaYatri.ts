@@ -26,13 +26,13 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "Auto (Easy Commute)",
     category: "auto",
     capacity: 3,
-    minFare: 36, // Verified from screenshot: ₹36 upto 2km
+    minFare: 40, // Revised base fare for 2km
     minDistanceKm: 2,
-    slab1Rate: 18, // Verified from screenshot: ₹18/km
+    slab1Rate: 19, // Revised rate per km
     slab1EndKm: null,
     slab2Rate: null,
-    pickupCharge: 0,
-    driverAdditions: 10, // Verified from screenshot: Driver Additions ₹10
+    pickupCharge: 25, // Revised pickup charge
+    driverAdditions: 0,
     priorityTip: 0,
   },
   {
@@ -40,26 +40,26 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "Auto Priority",
     category: "auto",
     capacity: 3,
-    minFare: 36,
+    minFare: 44, // Revised base fare for 2km
     minDistanceKm: 2,
-    slab1Rate: 18,
+    slab1Rate: 20, // Revised rate per km
     slab1EndKm: null,
     slab2Rate: null,
-    pickupCharge: 0,
-    driverAdditions: 10,
-    priorityTip: 30, // Faster pickup priority tip
+    pickupCharge: 25,
+    driverAdditions: 0,
+    priorityTip: 0,
   },
   {
     vehicleType: "NON_AC_CAB",
     label: "Non-AC Cab",
     category: "hatchback",
     capacity: 4,
-    minFare: 85,
+    minFare: 100, // Government limit Category 1: ₹100 base for 4km
     minDistanceKm: 4,
-    slab1Rate: 20,
-    slab1EndKm: 10,
-    slab2Rate: 16,
-    pickupCharge: 20,
+    slab1Rate: 24, // ₹24 per km
+    slab1EndKm: null,
+    slab2Rate: null,
+    pickupCharge: 24, // Flat fee/pickup charge
     driverAdditions: 0,
     priorityTip: 0,
   },
@@ -68,12 +68,12 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "AC Cab",
     category: "hatchback",
     capacity: 4,
-    minFare: 100,
+    minFare: 115, // Government limit Category 2: ₹115 base for 4km
     minDistanceKm: 4,
-    slab1Rate: 23,
-    slab1EndKm: 10,
-    slab2Rate: 18.4,
-    pickupCharge: 20,
+    slab1Rate: 28, // ₹28 per km
+    slab1EndKm: null,
+    slab2Rate: null,
+    pickupCharge: 24,
     driverAdditions: 0,
     priorityTip: 0,
   },
@@ -82,12 +82,12 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "Sedan Premium",
     category: "sedan",
     capacity: 4,
-    minFare: 121,
+    minFare: 115,
     minDistanceKm: 4,
-    slab1Rate: 28.5,
-    slab1EndKm: 10,
-    slab2Rate: 22.5,
-    pickupCharge: 21,
+    slab1Rate: 28,
+    slab1EndKm: null,
+    slab2Rate: null,
+    pickupCharge: 24,
     driverAdditions: 0,
     priorityTip: 0,
   },
@@ -96,12 +96,12 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "XL Cab",
     category: "suv",
     capacity: 6,
-    minFare: 130,
+    minFare: 130, // Government limit Category 3: ₹130 base for 4km
     minDistanceKm: 4,
-    slab1Rate: 30,
+    slab1Rate: 32, // ₹32 per km
     slab1EndKm: null,
     slab2Rate: null,
-    pickupCharge: 40,
+    pickupCharge: 24,
     driverAdditions: 0,
     priorityTip: 0,
   },
@@ -110,12 +110,12 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "XL Premium",
     category: "suv",
     capacity: 6,
-    minFare: 150,
+    minFare: 130,
     minDistanceKm: 4,
-    slab1Rate: 36,
+    slab1Rate: 32,
     slab1EndKm: null,
     slab2Rate: null,
-    pickupCharge: 60,
+    pickupCharge: 40,
     driverAdditions: 0,
     priorityTip: 0,
   },
@@ -138,6 +138,7 @@ export interface NammaYatriEstimateResult {
     driverAdditions: number;
     distanceFare: number;
     priorityTip: number;
+    congestionCharge?: number;
     nightSurcharge: number;
     total: number;
   };
@@ -180,17 +181,27 @@ export function calculateNammaYatriFares(
       }
     }
 
+    // Congestion Charge (10% on base + distance fare for Auto Priority)
+    const congestionCharge = cfg.vehicleType === "AUTO_PRIORITY"
+      ? Math.round((cfg.minFare + distanceFare) * 0.10)
+      : 0;
+
     const subtotal =
       cfg.minFare +
       distanceFare +
       cfg.pickupCharge +
       cfg.driverAdditions +
-      cfg.priorityTip;
+      cfg.priorityTip +
+      congestionCharge;
 
-    // Night surcharge (10 PM - 5 AM IST): 1.5x for auto, 1.25x for cab
-    const nightMultiplier = cfg.category === "auto" ? 1.5 : 1.25;
+    // Night surcharge (10 PM - 5 AM IST for Auto: 1.5x on base+distance; 12 AM - 6 AM for Cab: 1.1x on total)
+    const nightMultiplier = cfg.category === "auto" ? 1.5 : 1.1;
+    const nightBase = cfg.category === "auto"
+      ? (cfg.minFare + distanceFare)
+      : (cfg.minFare + distanceFare + cfg.pickupCharge);
+
     const nightSurcharge = night
-      ? (cfg.minFare + distanceFare) * (nightMultiplier - 1)
+      ? nightBase * (nightMultiplier - 1)
       : 0;
 
     const total = round2(subtotal + nightSurcharge);
@@ -216,6 +227,7 @@ export function calculateNammaYatriFares(
           driverAdditions: round2(cfg.driverAdditions),
           distanceFare: round2(distanceFare),
           priorityTip: round2(cfg.priorityTip),
+          congestionCharge: congestionCharge > 0 ? congestionCharge : undefined,
           nightSurcharge: round2(nightSurcharge),
           total: Math.round(total),
         },

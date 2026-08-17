@@ -137,6 +137,13 @@ export const FareBreakdownModal: React.FC<FareBreakdownModalProps> = ({
             </div>
           )}
 
+          {b.congestionCharge != null && b.congestionCharge > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", color: "#FBBF24" }}>
+              <span>Congestion Charge (10%)</span>
+              <strong>+₹{b.congestionCharge}</strong>
+            </div>
+          )}
+
           {b.timeFare != null && b.timeFare > 0 && (
             <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text-secondary)" }}>
               <span>Time Fare</span>
