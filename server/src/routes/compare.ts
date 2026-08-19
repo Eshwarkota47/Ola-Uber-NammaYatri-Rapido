@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import https from "https";
 import { searchLocations, BENGALURU_LOCATIONS } from "../lib/locations";
-import { calculateDistance } from "../lib/geo";
+import { calculateDistance, isAirport } from "../lib/geo";
 import { calculateNammaYatriFares, isNightFareIST } from "../engines/nammaYatri";
 import { calculateUberFares } from "../engines/uber";
 import { calculateOlaFares } from "../engines/ola";
@@ -186,10 +186,18 @@ compareRouter.get("/compare", async (req: Request, res: Response) => {
   }
 
   const customSurge = customSurgeStr ? parseFloat(customSurgeStr) : undefined;
-  const nammaYatriEstimates = calculateNammaYatriFares(route.distanceKm, route.durationMin, forceNight);
-  const uberEstimates = calculateUberFares(route.distanceKm, route.durationMin, customSurge);
-  const olaEstimates = calculateOlaFares(route.distanceKm, route.durationMin, customSurge);
-  const rapidoEstimates = calculateRapidoFares(route.distanceKm, route.durationMin, customSurge);
+  let nammaYatriEstimates = calculateNammaYatriFares(route.distanceKm, route.durationMin, forceNight);
+  let uberEstimates = calculateUberFares(route.distanceKm, route.durationMin, customSurge);
+  let olaEstimates = calculateOlaFares(route.distanceKm, route.durationMin, customSurge);
+  let rapidoEstimates = calculateRapidoFares(route.distanceKm, route.durationMin, customSurge);
+
+  // Auto and Bike options are not allowed/available to/from the Airport
+  if (isAirport(pickupLat, pickupLng) || isAirport(dropLat, dropLng)) {
+    nammaYatriEstimates = nammaYatriEstimates.filter((e) => e.category !== "auto");
+    uberEstimates = uberEstimates.filter((e) => e.category !== "auto" && e.category !== "bike");
+    olaEstimates = olaEstimates.filter((e) => e.category !== "auto" && e.category !== "bike");
+    rapidoEstimates = rapidoEstimates.filter((e) => e.category !== "auto" && e.category !== "bike");
+  }
 
   const categories = [
     { id: "auto", name: "Auto Rickshaw", icon: "🛺" },

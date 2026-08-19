@@ -50,3 +50,21 @@ export function calculateDistance(
     source: "haversine",
   };
 }
+
+export function isAirport(lat: number, lng: number): boolean {
+  const airportLat = 13.1986;
+  const airportLng = 77.7066;
+  
+  const dLat = toRad(airportLat - lat);
+  const dLon = toRad(airportLng - lng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat)) *
+      Math.cos(toRad(airportLat)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = EARTH_RADIUS_KM * c;
+  
+  return distance < 5; // true if within 5km radius
+}
