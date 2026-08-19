@@ -12,12 +12,13 @@ export interface NammaYatriRateCard {
   capacity: number;
   minFare: number;
   minDistanceKm: number;
-  slab1Rate: number; // 2km+ rate for Auto (₹18/km), 4km-10km rate for Cabs
-  slab1EndKm: number | null; // 10km if 2-slab
-  slab2Rate: number | null; // >10km rate for Cabs
+  slab1Rate: number; // 2km+ rate for Auto, 4km-12km for Non-AC Cab, 4km-10km for AC Cab
+  slab1EndKm: number | null; // 12km for Non-AC Cab, 10km for AC Cab
+  slab2Rate: number | null; // Rate after slab1EndKm
   pickupCharge: number;
-  driverAdditions: number; // ₹10 for Auto driver additions
-  priorityTip: number; // ₹30 for Auto Priority
+  driverAdditions: number;
+  priorityTip: number;
+  congestionPercentage?: number; // e.g. 10 for Auto Priority, 15 for AC Cab, 25 for Sedan Priority
 }
 
 export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
@@ -26,84 +27,90 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "Auto (Easy Commute)",
     category: "auto",
     capacity: 3,
-    minFare: 40, // Revised base fare for 2km
+    minFare: 40,
     minDistanceKm: 2,
-    slab1Rate: 19, // Revised rate per km
+    slab1Rate: 19,
     slab1EndKm: null,
     slab2Rate: null,
-    pickupCharge: 25, // Revised pickup charge
+    pickupCharge: 25,
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 0,
   },
   {
     vehicleType: "AUTO_PRIORITY",
     label: "Auto Priority",
     category: "auto",
     capacity: 3,
-    minFare: 44, // Revised base fare for 2km
+    minFare: 44,
     minDistanceKm: 2,
-    slab1Rate: 20, // Revised rate per km
+    slab1Rate: 20,
     slab1EndKm: null,
     slab2Rate: null,
     pickupCharge: 25,
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 10,
   },
   {
     vehicleType: "NON_AC_CAB",
     label: "Non-AC Cab",
     category: "hatchback",
     capacity: 4,
-    minFare: 100, // Government limit Category 1: ₹100 base for 4km
+    minFare: 85, // Calibrated from Namma Yatri screenshot
     minDistanceKm: 4,
-    slab1Rate: 24, // ₹24 per km
-    slab1EndKm: null,
-    slab2Rate: null,
-    pickupCharge: 24, // Flat fee/pickup charge
+    slab1Rate: 20, // ₹20/km
+    slab1EndKm: 12, // slab 1 ends at 12km
+    slab2Rate: 16, // ₹16/km after 12km
+    pickupCharge: 30, // ₹30 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 0,
   },
   {
     vehicleType: "AC_CAB",
     label: "AC Cab",
     category: "hatchback",
     capacity: 4,
-    minFare: 115, // Government limit Category 2: ₹115 base for 4km
+    minFare: 100, // Calibrated from Namma Yatri screenshot
     minDistanceKm: 4,
-    slab1Rate: 28, // ₹28 per km
-    slab1EndKm: null,
-    slab2Rate: null,
-    pickupCharge: 24,
+    slab1Rate: 23, // ₹23/km
+    slab1EndKm: 10, // slab 1 ends at 10km
+    slab2Rate: 18.40, // ₹18.40/km after 10km
+    pickupCharge: 30, // ₹30 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 15, // 15% congestion charge
   },
   {
     vehicleType: "SEDAN_PREMIUM",
-    label: "Sedan Premium",
+    label: "Sedan Priority",
     category: "sedan",
     capacity: 4,
-    minFare: 115,
+    minFare: 100, // DZire Priority Cab uses similar AC rates
     minDistanceKm: 4,
-    slab1Rate: 28,
-    slab1EndKm: null,
-    slab2Rate: null,
-    pickupCharge: 24,
+    slab1Rate: 23,
+    slab1EndKm: 10,
+    slab2Rate: 18.40,
+    pickupCharge: 30,
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 25, // 25% congestion charge
   },
   {
     vehicleType: "XL_CAB",
     label: "XL Cab",
     category: "suv",
     capacity: 6,
-    minFare: 130, // Government limit Category 3: ₹130 base for 4km
+    minFare: 130, // Calibrated from Namma Yatri screenshot
     minDistanceKm: 4,
-    slab1Rate: 32, // ₹32 per km
-    slab1EndKm: null,
-    slab2Rate: null,
-    pickupCharge: 24,
+    slab1Rate: 30, // ₹30/km
+    slab1EndKm: 10,
+    slab2Rate: 24, // ₹24/km
+    pickupCharge: 40,
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 16, // 16% congestion charge
   },
   {
     vehicleType: "XL_PREMIUM",
@@ -112,12 +119,13 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     capacity: 6,
     minFare: 130,
     minDistanceKm: 4,
-    slab1Rate: 32,
-    slab1EndKm: null,
-    slab2Rate: null,
-    pickupCharge: 40,
+    slab1Rate: 30,
+    slab1EndKm: 10,
+    slab2Rate: 24,
+    pickupCharge: 60,
     driverAdditions: 0,
     priorityTip: 0,
+    congestionPercentage: 20,
   },
 ];
 
@@ -139,6 +147,7 @@ export interface NammaYatriEstimateResult {
     distanceFare: number;
     priorityTip: number;
     congestionCharge?: number;
+    congestionPercentage?: number;
     nightSurcharge: number;
     total: number;
   };
@@ -181,9 +190,10 @@ export function calculateNammaYatriFares(
       }
     }
 
-    // Congestion Charge (10% on base + distance fare for Auto Priority)
-    const congestionCharge = cfg.vehicleType === "AUTO_PRIORITY"
-      ? Math.round((cfg.minFare + distanceFare) * 0.10)
+    // Congestion Charge (based on dynamic congestionPercentage)
+    const congestionPercentage = cfg.congestionPercentage || 0;
+    const congestionCharge = congestionPercentage > 0
+      ? Math.round((cfg.minFare + distanceFare) * (congestionPercentage / 100))
       : 0;
 
     const subtotal =
@@ -228,6 +238,7 @@ export function calculateNammaYatriFares(
           distanceFare: round2(distanceFare),
           priorityTip: round2(cfg.priorityTip),
           congestionCharge: congestionCharge > 0 ? congestionCharge : undefined,
+          congestionPercentage: congestionPercentage > 0 ? congestionPercentage : undefined,
           nightSurcharge: round2(nightSurcharge),
           total: Math.round(total),
         },
@@ -249,6 +260,8 @@ export function calculateNammaYatriFares(
         driverAdditions: round2(cfg.driverAdditions),
         distanceFare: round2(distanceFare),
         priorityTip: round2(cfg.priorityTip),
+        congestionCharge: congestionCharge > 0 ? congestionCharge : undefined,
+        congestionPercentage: congestionPercentage > 0 ? congestionPercentage : undefined,
         nightSurcharge: round2(nightSurcharge),
         total: Math.round(total),
       },
