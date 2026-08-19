@@ -186,9 +186,10 @@ compareRouter.get("/compare", async (req: Request, res: Response) => {
   }
 
   const customSurge = customSurgeStr ? parseFloat(customSurgeStr) : undefined;
+  const toAirport = isAirport(pickupLat, pickupLng) || isAirport(dropLat, dropLng);
   let nammaYatriEstimates = calculateNammaYatriFares(route.distanceKm, route.durationMin, forceNight);
   let uberEstimates = calculateUberFares(route.distanceKm, route.durationMin, customSurge);
-  let olaEstimates = calculateOlaFares(route.distanceKm, route.durationMin, customSurge);
+  let olaEstimates = calculateOlaFares(route.distanceKm, route.durationMin, customSurge, toAirport);
   let rapidoEstimates = calculateRapidoFares(route.distanceKm, route.durationMin, customSurge);
 
   // Auto and Bike options are not allowed/available to/from the Airport

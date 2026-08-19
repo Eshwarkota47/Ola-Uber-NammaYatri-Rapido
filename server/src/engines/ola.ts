@@ -183,15 +183,25 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export function calculateOlaFares(
   distanceKm: number,
   durationMin: number,
-  customSurge?: number
+  customSurge?: number,
+  isAirportRoute: boolean = false
 ): OlaEstimateResult[] {
   const surge = customSurge != null ? customSurge : 1.0;
 
   return OLA_TIER_CONFIGS.map((cfg) => {
     const baseFare = cfg.baseFare;
-    const ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
-    const distanceFare = round2(distanceKm * ratePerKm);
+    
+    // Determine the rate per km based on route type (Airport vs standard)
+    let ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
+    if (isAirportRoute) {
+      if (cfg.id === "mini-non-ac") ratePerKm = 15.00;
+      else if (cfg.id === "mini" || cfg.id === "priority") ratePerKm = 15.30;
+      else if (cfg.id === "prime-sedan") ratePerKm = 15.80;
+      else if (cfg.id === "prime-plus") ratePerKm = 17.50;
+      else if (cfg.id === "prime-suv") ratePerKm = 27.50;
+    }
 
+    const distanceFare = round2(distanceKm * ratePerKm);
     const timeFare = 0;
     let subtotalBeforeSurge = baseFare + distanceFare + cfg.bookingFee;
 
@@ -201,7 +211,7 @@ export function calculateOlaFares(
     }
 
     // Distance-based dynamic rate adjustments (Ola short-trip scaling for trips <= 10km)
-    if (distanceKm <= 10) {
+    if (!isAirportRoute && distanceKm <= 10) {
       if (cfg.id === "mini-non-ac") subtotalBeforeSurge *= 0.86;
       else if (cfg.id === "mini") subtotalBeforeSurge *= 0.783;
       else if (cfg.id === "priority") subtotalBeforeSurge *= 0.79;
@@ -215,7 +225,10 @@ export function calculateOlaFares(
     );
     const surgeAmount = round2(subtotal - subtotalBeforeSurge);
     const taxes = round2(subtotal * 0.05); // 5% GST
-    const total = round2(subtotal + taxes);
+
+    // Add Airport Toll (₹120) if it is an Airport trip
+    const tollFee = isAirportRoute ? 120 : 0;
+    const total = round2(subtotal + taxes + tollFee);
 
     const rangeDelta = Math.max(5, Math.round(total * 0.025));
     const fareMin = Math.max(cfg.minimumFare, Math.floor((total - rangeDelta) / 5) * 5);
