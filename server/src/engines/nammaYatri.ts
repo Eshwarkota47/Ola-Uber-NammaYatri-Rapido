@@ -177,26 +177,45 @@ export function calculateNammaYatriFares(
   const night = forceNight || isNightFareIST();
 
   return EXACT_NAMMA_YATRI_RATES.map((cfg) => {
+    const speedKmh = distanceKm / (durationMin / 60);
+
+    // Rate scaling based on speed/traffic congestion
+    let rateMultiplier = 1.0;
+    if (speedKmh > 16) {
+      if (cfg.category === "auto") {
+        rateMultiplier = 0.82; // Autos get discounted in light traffic
+      } else if (cfg.category === "hatchback" || cfg.category === "sedan") {
+        rateMultiplier = 0.90; // Hatchbacks and Sedans get a 10% discount in light traffic
+      }
+    }
+
+    const activeSlab1Rate = cfg.slab1Rate * rateMultiplier;
+    const activeSlab2Rate = cfg.slab2Rate ? cfg.slab2Rate * rateMultiplier : null;
+
     let distanceFare = 0;
     const extraKm = Math.max(0, distanceKm - cfg.minDistanceKm);
 
     if (extraKm > 0) {
-      if (cfg.slab1EndKm != null && cfg.slab2Rate != null) {
+      if (cfg.slab1EndKm != null && activeSlab2Rate != null) {
         const slab1Km = Math.min(extraKm, cfg.slab1EndKm - cfg.minDistanceKm);
         const slab2Km = Math.max(0, distanceKm - cfg.slab1EndKm);
-        distanceFare = slab1Km * cfg.slab1Rate + slab2Km * cfg.slab2Rate;
+        distanceFare = slab1Km * activeSlab1Rate + slab2Km * activeSlab2Rate;
       } else {
-        distanceFare = extraKm * cfg.slab1Rate;
+        distanceFare = extraKm * activeSlab1Rate;
       }
     }
 
-    // Congestion Charge (scales down dynamically for long highway/airport routes over 20km)
+    // Congestion Charge (scales down dynamically based on speed and route length)
     let congestionPercentage = cfg.congestionPercentage || 0;
     if (distanceKm > 20) {
       if (cfg.vehicleType === "AC_CAB") congestionPercentage = 0;
       else if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 10;
       else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 4.5;
+    } else if (speedKmh > 16) {
+      if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 18; // Sedan Priority keeps moderate congestion
+      else congestionPercentage = Math.round(congestionPercentage * 0.3); // Others drop to 30% of max congestion
     }
+
     const congestionCharge = congestionPercentage > 0
       ? Math.round((cfg.minFare + distanceFare) * (congestionPercentage / 100))
       : 0;
