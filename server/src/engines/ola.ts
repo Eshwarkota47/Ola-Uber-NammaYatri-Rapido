@@ -20,6 +20,7 @@ export interface OlaTierConfig {
   longTripPerKmRate: number; // for distance > 18km
   minDistanceKm: number;
   minimumFare: number;
+  bookingFee: number; // Platform/booking fee
   cancellationFee: number;
   etaBaseMinutes: number;
 }
@@ -32,11 +33,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 3,
     category: "auto",
     iconEmoji: "🛺",
-    baseFare: 36,
-    regularPerKmRate: 16.0,
-    longTripPerKmRate: 13.5,
-    minDistanceKm: 2,
-    minimumFare: 45,
+    baseFare: 30, // Calibrated
+    regularPerKmRate: 14.0, // Calibrated
+    longTripPerKmRate: 12.0,
+    minDistanceKm: 0,
+    minimumFare: 46,
+    bookingFee: 6, // Calibrated
     cancellationFee: 30,
     etaBaseMinutes: 2,
   },
@@ -47,11 +49,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 1,
     category: "bike",
     iconEmoji: "🏍️",
-    baseFare: 20,
-    regularPerKmRate: 9.0,
-    longTripPerKmRate: 7.6,
+    baseFare: 20, // Calibrated
+    regularPerKmRate: 7.0, // Calibrated
+    longTripPerKmRate: 6.0,
     minDistanceKm: 0,
     minimumFare: 30,
+    bookingFee: 5,
     cancellationFee: 20,
     etaBaseMinutes: 2,
   },
@@ -62,11 +65,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 4,
     category: "hatchback",
     iconEmoji: "🚘",
-    baseFare: 35,
-    regularPerKmRate: 16.8,
-    longTripPerKmRate: 13.5,
+    baseFare: 50, // Calibrated
+    regularPerKmRate: 12.0, // Calibrated
+    longTripPerKmRate: 10.0,
     minDistanceKm: 0,
     minimumFare: 75,
+    bookingFee: 30, // Calibrated
     cancellationFee: 40,
     etaBaseMinutes: 3,
   },
@@ -77,11 +81,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 4,
     category: "hatchback",
     iconEmoji: "🚗",
-    baseFare: 35,
-    regularPerKmRate: 16.8,
-    longTripPerKmRate: 13.5,
+    baseFare: 50, // Calibrated
+    regularPerKmRate: 14.0, // Calibrated
+    longTripPerKmRate: 11.5,
     minDistanceKm: 0,
     minimumFare: 80,
+    bookingFee: 30, // Calibrated
     cancellationFee: 50,
     etaBaseMinutes: 3,
   },
@@ -92,11 +97,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 4,
     category: "hatchback",
     iconEmoji: "⚡",
-    baseFare: 40,
-    regularPerKmRate: 16.8,
-    longTripPerKmRate: 13.5,
+    baseFare: 50,
+    regularPerKmRate: 14.0,
+    longTripPerKmRate: 11.5,
     minDistanceKm: 0,
     minimumFare: 80,
+    bookingFee: 30,
     cancellationFee: 50,
     etaBaseMinutes: 1,
   },
@@ -107,11 +113,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 4,
     category: "sedan",
     iconEmoji: "🚕",
-    baseFare: 40,
-    regularPerKmRate: 17.0,
-    longTripPerKmRate: 13.8,
+    baseFare: 50, // Calibrated
+    regularPerKmRate: 16.0, // Calibrated
+    longTripPerKmRate: 13.0,
     minDistanceKm: 0,
     minimumFare: 100,
+    bookingFee: 30, // Calibrated
     cancellationFee: 60,
     etaBaseMinutes: 4,
   },
@@ -122,11 +129,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 4,
     category: "sedan",
     iconEmoji: "✨",
-    baseFare: 45,
-    regularPerKmRate: 17.3,
-    longTripPerKmRate: 14.1,
+    baseFare: 50, // Calibrated
+    regularPerKmRate: 18.0, // Calibrated
+    longTripPerKmRate: 14.5,
     minDistanceKm: 0,
     minimumFare: 120,
+    bookingFee: 30, // Calibrated
     cancellationFee: 75,
     etaBaseMinutes: 3,
   },
@@ -137,11 +145,12 @@ export const OLA_TIER_CONFIGS: OlaTierConfig[] = [
     capacity: 6,
     category: "suv",
     iconEmoji: "🚙",
-    baseFare: 65,
-    regularPerKmRate: 27.8,
-    longTripPerKmRate: 22.0,
+    baseFare: 80, // Calibrated
+    regularPerKmRate: 30.0, // Calibrated
+    longTripPerKmRate: 24.0,
     minDistanceKm: 0,
     minimumFare: 180,
+    bookingFee: 34, // Calibrated
     cancellationFee: 100,
     etaBaseMinutes: 4,
   },
@@ -179,21 +188,18 @@ export function calculateOlaFares(
   const surge = customSurge != null ? customSurge : 1.0;
 
   return OLA_TIER_CONFIGS.map((cfg) => {
-    let baseFare = cfg.baseFare;
-    let distanceFare = 0;
-
-    if (cfg.id === "auto") {
-      baseFare = 36;
-      const extraKm = Math.max(0, distanceKm - cfg.minDistanceKm);
-      const ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
-      distanceFare = round2(extraKm * ratePerKm + 10);
-    } else {
-      const ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
-      distanceFare = round2(distanceKm * ratePerKm);
-    }
+    const baseFare = cfg.baseFare;
+    const ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
+    const distanceFare = round2(distanceKm * ratePerKm);
 
     const timeFare = 0;
-    const subtotalBeforeSurge = baseFare + distanceFare;
+    let subtotalBeforeSurge = baseFare + distanceFare + cfg.bookingFee;
+
+    // Apply priority 1.25x surcharge for Priority tier
+    if (cfg.id === "priority") {
+      subtotalBeforeSurge = round2(subtotalBeforeSurge * 1.25);
+    }
+
     const subtotal = round2(
       Math.max(subtotalBeforeSurge * surge, cfg.minimumFare)
     );
