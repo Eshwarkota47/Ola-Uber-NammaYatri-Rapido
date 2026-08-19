@@ -205,9 +205,15 @@ export function calculateOlaFares(
     const timeFare = 0;
     let subtotalBeforeSurge = baseFare + distanceFare + cfg.bookingFee;
 
-    // Apply priority 1.25x surcharge for Priority tier
+    // Apply priority surcharge for Priority tier:
+    // - For airport trips: flat ₹25 surcharge
+    // - For standard trips: 1.25x multiplier
     if (cfg.id === "priority") {
-      subtotalBeforeSurge = round2(subtotalBeforeSurge * 1.25);
+      if (isAirportRoute) {
+        subtotalBeforeSurge = round2(subtotalBeforeSurge + 25);
+      } else {
+        subtotalBeforeSurge = round2(subtotalBeforeSurge * 1.25);
+      }
     }
 
     // Distance-based dynamic rate adjustments (Ola short-trip scaling for trips <= 10km)
