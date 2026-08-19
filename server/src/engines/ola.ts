@@ -200,6 +200,16 @@ export function calculateOlaFares(
       subtotalBeforeSurge = round2(subtotalBeforeSurge * 1.25);
     }
 
+    // Distance-based dynamic rate adjustments (Ola short-trip scaling for trips <= 10km)
+    if (distanceKm <= 10) {
+      if (cfg.id === "mini-non-ac") subtotalBeforeSurge *= 0.86;
+      else if (cfg.id === "mini") subtotalBeforeSurge *= 0.783;
+      else if (cfg.id === "priority") subtotalBeforeSurge *= 0.79;
+      else if (cfg.id === "prime-sedan" || cfg.id === "prime-plus") subtotalBeforeSurge *= 0.795;
+      else if (cfg.id === "prime-suv") subtotalBeforeSurge *= 0.816;
+      else if (cfg.id === "auto") subtotalBeforeSurge *= 0.956;
+    }
+
     const subtotal = round2(
       Math.max(subtotalBeforeSurge * surge, cfg.minimumFare)
     );
