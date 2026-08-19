@@ -106,26 +106,26 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     minDistanceKm: 4,
     slab1Rate: 30, // ₹30/km
     slab1EndKm: 10,
-    slab2Rate: 24, // ₹24/km
+    slab2Rate: 25, // ₹25/km after 10km (calibrated from screenshot)
     pickupCharge: 40,
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 16, // 16% congestion charge
+    congestionPercentage: 15, // 15% congestion charge
   },
   {
     vehicleType: "XL_PREMIUM",
     label: "XL Premium",
     category: "suv",
     capacity: 6,
-    minFare: 130,
+    minFare: 150, // Calibrated from screenshot
     minDistanceKm: 4,
-    slab1Rate: 30,
-    slab1EndKm: 10,
-    slab2Rate: 24,
+    slab1Rate: 36, // ₹36/km flat rate
+    slab1EndKm: null,
+    slab2Rate: null,
     pickupCharge: 60,
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 20,
+    congestionPercentage: 0, // No congestion charge
   },
 ];
 
@@ -217,33 +217,8 @@ export function calculateNammaYatriFares(
     const total = round2(subtotal + nightSurcharge);
     const etaMinutes = cfg.category === "auto" ? 2 : 4;
 
-    if (cfg.category === "auto") {
-      const fareMin = Math.round(total - 10);
-      const fareMax = Math.round(total);
-      return {
-        provider: "Namma Yatri",
-        vehicleType: cfg.vehicleType,
-        label: cfg.label,
-        category: cfg.category,
-        capacity: cfg.capacity,
-        estimatedFare: Math.round(total),
-        fareMin,
-        fareMax,
-        isNightFare: night,
-        etaMinutes,
-        breakdown: {
-          baseFare: round2(cfg.minFare),
-          pickupCharge: round2(cfg.pickupCharge),
-          driverAdditions: round2(cfg.driverAdditions),
-          distanceFare: round2(distanceFare),
-          priorityTip: round2(cfg.priorityTip),
-          congestionCharge: congestionCharge > 0 ? congestionCharge : undefined,
-          congestionPercentage: congestionPercentage > 0 ? congestionPercentage : undefined,
-          nightSurcharge: round2(nightSurcharge),
-          total: Math.round(total),
-        },
-      };
-    }
+    const fareMin = Math.round(total - 10);
+    const fareMax = Math.round(total);
 
     return {
       provider: "Namma Yatri",
@@ -252,6 +227,8 @@ export function calculateNammaYatriFares(
       category: cfg.category,
       capacity: cfg.capacity,
       estimatedFare: Math.round(total),
+      fareMin,
+      fareMax,
       isNightFare: night,
       etaMinutes,
       breakdown: {
