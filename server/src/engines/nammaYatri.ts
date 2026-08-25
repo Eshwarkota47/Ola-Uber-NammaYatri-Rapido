@@ -61,11 +61,11 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     minDistanceKm: 4,
     slab1Rate: 20, // ₹20/km
     slab1EndKm: 12, // slab 1 ends at 12km
-    slab2Rate: 16, // ₹16/km after 12km
+    slab2Rate: 25, // ₹25/km after 12km (calibrated from screenshot)
     pickupCharge: 30, // ₹30 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 0,
+    congestionPercentage: 9, // 9% congestion charge
   },
   {
     vehicleType: "AC_CAB",
@@ -179,9 +179,9 @@ export function calculateNammaYatriFares(
   return EXACT_NAMMA_YATRI_RATES.map((cfg) => {
     const speedKmh = distanceKm / (durationMin / 60);
 
-    // Rate scaling based on speed/traffic congestion
+    // Rate scaling based on speed/traffic congestion (Only applies to high-speed/highway trips over 30 km/h)
     let rateMultiplier = 1.0;
-    if (speedKmh > 16) {
+    if (speedKmh > 30) {
       if (cfg.category === "auto") {
         rateMultiplier = 0.82; // Autos get discounted in light traffic
       } else if (cfg.category === "hatchback" || cfg.category === "sedan") {
@@ -207,11 +207,11 @@ export function calculateNammaYatriFares(
 
     // Congestion Charge (scales down dynamically based on speed and route length)
     let congestionPercentage = cfg.congestionPercentage || 0;
-    if (distanceKm > 20) {
+    if (distanceKm > 20 && speedKmh > 30) {
       if (cfg.vehicleType === "AC_CAB") congestionPercentage = 0;
       else if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 10;
       else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 4.5;
-    } else if (speedKmh > 16) {
+    } else if (speedKmh > 30) {
       if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 18; // Sedan Priority keeps moderate congestion
       else congestionPercentage = Math.round(congestionPercentage * 0.3); // Others drop to 30% of max congestion
     }
