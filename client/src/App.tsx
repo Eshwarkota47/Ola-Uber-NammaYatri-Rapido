@@ -173,6 +173,7 @@ export function App() {
         origin: new (window as any).google.maps.LatLng(pickup.lat, pickup.lng),
         destination: new (window as any).google.maps.LatLng(drop.lat, drop.lng),
         travelMode: (window as any).google.maps.TravelMode.DRIVING,
+        avoidTolls: true,
       },
       (result: any, status: string) => {
         if (status === (window as any).google.maps.DirectionsStatus.OK) {

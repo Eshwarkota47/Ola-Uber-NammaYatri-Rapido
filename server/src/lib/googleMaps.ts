@@ -106,7 +106,7 @@ export async function googleDirectionsMatrix(
   destLng: number,
   apiKey: string
 ): Promise<{ distanceKm: number; durationMin: number } | null> {
-  const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&mode=driving&departure_time=now&key=${apiKey}`;
+  const directionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&mode=driving&departure_time=now&avoid=tolls&key=${apiKey}`;
 
   try {
     const json: any = await fetchJson(directionsUrl);
