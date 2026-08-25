@@ -22,10 +22,167 @@ export function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedItemForModal, setSelectedItemForModal] = useState<FareItem | null>(null);
 
+  const [map, setMap] = useState<any>(null);
+  const [directionsRenderer, setDirectionsRenderer] = useState<any>(null);
+
   const handleSaveApiKey = (key: string) => {
     setApiKey(key);
     localStorage.setItem("GOOGLE_MAPS_API_KEY", key);
   };
+
+  const darkMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#1e293b" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#1e293b" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
+    {
+      featureType: "administrative.locality",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#cbd5e1" }],
+    },
+    {
+      featureType: "poi",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#cbd5e1" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "geometry",
+      stylers: [{ color: "#0f172a" }],
+    },
+    {
+      featureType: "poi.park",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#475569" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry",
+      stylers: [{ color: "#334155" }],
+    },
+    {
+      featureType: "road",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#1e293b" }],
+    },
+    {
+      featureType: "road",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#64748b" }],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "geometry",
+      stylers: [{ color: "#475569" }],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "geometry.stroke",
+      stylers: [{ color: "#1e293b" }],
+    },
+    {
+      featureType: "road.highway",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#94a3b8" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "geometry",
+      stylers: [{ color: "#1e293b" }],
+    },
+    {
+      featureType: "transit.station",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#cbd5e1" }],
+    },
+    {
+      featureType: "water",
+      elementType: "geometry",
+      stylers: [{ color: "#0f172a" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#475569" }],
+    },
+    {
+      featureType: "water",
+      elementType: "labels.text.stroke",
+      stylers: [{ color: "#0f172a" }],
+    },
+  ];
+
+  const initMap = () => {
+    const mapElement = document.getElementById("route-map");
+    if (!mapElement || !(window as any).google) return;
+
+    const newMap = new (window as any).google.maps.Map(mapElement, {
+      center: { lat: 12.9716, lng: 77.5946 }, // Bengaluru center
+      zoom: 12,
+      styles: darkMapStyle,
+      disableDefaultUI: true,
+      zoomControl: true,
+    });
+
+    const newRenderer = new (window as any).google.maps.DirectionsRenderer({
+      map: newMap,
+      suppressMarkers: false,
+    });
+
+    setMap(newMap);
+    setDirectionsRenderer(newRenderer);
+  };
+
+  // Load Google Maps JS Script dynamically if apiKey is available
+  useEffect(() => {
+    if (!apiKey || apiKey.trim().length <= 5) return;
+
+    // Check if script is already loaded
+    if ((window as any).google) {
+      setTimeout(initMap, 500);
+      return;
+    }
+
+    const existingScript = document.getElementById("google-maps-js");
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.id = "google-maps-js";
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        setTimeout(initMap, 500);
+      };
+      document.head.appendChild(script);
+    }
+  }, [apiKey]);
+
+  // Re-trigger initMap when map container is mounted
+  useEffect(() => {
+    if (apiKey && (window as any).google && !map) {
+      setTimeout(initMap, 500);
+    }
+  }, [apiKey, map, compareData]);
+
+  // Update Route on the map when pickup, drop, or map changes
+  useEffect(() => {
+    if (!map || !directionsRenderer || !pickup || !drop || !(window as any).google) return;
+
+    const directionsService = new (window as any).google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: new (window as any).google.maps.LatLng(pickup.lat, pickup.lng),
+        destination: new (window as any).google.maps.LatLng(drop.lat, drop.lng),
+        travelMode: (window as any).google.maps.TravelMode.DRIVING,
+      },
+      (result: any, status: string) => {
+        if (status === (window as any).google.maps.DirectionsStatus.OK) {
+          directionsRenderer.setDirections(result);
+        } else {
+          console.error("Directions request failed due to " + status);
+        }
+      }
+    );
+  }, [pickup, drop, map, directionsRenderer]);
 
   // Fetch initial locations list
   useEffect(() => {
@@ -280,6 +437,26 @@ export function App() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Google Maps Route Display Card */}
+          {apiKey && (
+            <div className="glass-panel" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ fontSize: "0.8rem", color: "#4ADE80", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Route size={15} color="#4ADE80" />
+                Live Driving Route Visualizer
+              </div>
+              <div 
+                id="route-map" 
+                style={{ 
+                  width: "100%", 
+                  height: "280px", 
+                  borderRadius: "12px", 
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "#0f172a"
+                }}
+              ></div>
             </div>
           )}
 
