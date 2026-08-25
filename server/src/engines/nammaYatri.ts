@@ -87,15 +87,15 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     label: "Sedan Priority",
     category: "sedan",
     capacity: 4,
-    minFare: 100, // DZire Priority Cab uses similar AC rates
+    minFare: 115, // Calibrated from Namma Yatri screenshot
     minDistanceKm: 4,
-    slab1Rate: 23,
-    slab1EndKm: 10,
-    slab2Rate: 18.40, // ₹18.40/km after 10km (official rate)
-    pickupCharge: 30,
+    slab1Rate: 27, // ₹27/km
+    slab1EndKm: 12, // slab 1 ends at 12km
+    slab2Rate: 21, // ₹21/km after 12km
+    pickupCharge: 30, // ₹30 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 25, // 25% congestion charge
+    congestionPercentage: 5, // 5% congestion charge
   },
   {
     vehicleType: "XL_CAB",
