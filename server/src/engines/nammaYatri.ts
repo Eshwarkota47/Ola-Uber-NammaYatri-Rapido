@@ -172,48 +172,42 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export function calculateNammaYatriFares(
   distanceKm: number,
   durationMin: number,
-  forceNight: boolean = false
+  forceNight: boolean = false,
+  surgeMultiplier: number = 1.0
 ): NammaYatriEstimateResult[] {
   const night = forceNight || isNightFareIST();
 
   return EXACT_NAMMA_YATRI_RATES.map((cfg) => {
     const speedKmh = distanceKm / (durationMin / 60);
 
-    // Rate scaling based on speed/traffic congestion (Only applies to high-speed/highway trips over 30 km/h)
-    let rateMultiplier = 1.0;
-    if (speedKmh > 30) {
-      if (cfg.category === "auto") {
-        rateMultiplier = 0.82; // Autos get discounted in light traffic
-      } else if (cfg.category === "hatchback" || cfg.category === "sedan") {
-        rateMultiplier = 0.90; // Hatchbacks and Sedans get a 10% discount in light traffic
-      }
-    }
-
-    const activeSlab1Rate = cfg.slab1Rate * rateMultiplier;
-    const activeSlab2Rate = cfg.slab2Rate ? cfg.slab2Rate * rateMultiplier : null;
-
     let distanceFare = 0;
     const extraKm = Math.max(0, distanceKm - cfg.minDistanceKm);
 
     if (extraKm > 0) {
-      if (cfg.slab1EndKm != null && activeSlab2Rate != null) {
+      if (cfg.slab1EndKm != null && cfg.slab2Rate != null) {
         const slab1Km = Math.min(extraKm, cfg.slab1EndKm - cfg.minDistanceKm);
         const slab2Km = Math.max(0, distanceKm - cfg.slab1EndKm);
-        distanceFare = slab1Km * activeSlab1Rate + slab2Km * activeSlab2Rate;
+        distanceFare = slab1Km * cfg.slab1Rate + slab2Km * cfg.slab2Rate;
       } else {
-        distanceFare = extraKm * activeSlab1Rate;
+        distanceFare = extraKm * cfg.slab1Rate;
       }
     }
 
-    // Congestion Charge (scales down dynamically based on speed and route length)
+    // Congestion Surcharge:
+    // - If surgeMultiplier is 1.0, congestion charge is 0
+    // - If surgeMultiplier > 1.0, scale the baseline congestion charge by the multiplier
     let congestionPercentage = cfg.congestionPercentage || 0;
-    if (distanceKm > 20 && speedKmh > 30) {
-      if (cfg.vehicleType === "AC_CAB") congestionPercentage = 0;
-      else if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 10;
-      else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 4.5;
-    } else if (speedKmh > 30) {
-      if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 18; // Sedan Priority keeps moderate congestion
-      else congestionPercentage = Math.round(congestionPercentage * 0.3); // Others drop to 30% of max congestion
+    if (surgeMultiplier <= 1.0) {
+      congestionPercentage = 0;
+    } else {
+      congestionPercentage = Math.round(congestionPercentage * surgeMultiplier);
+      
+      // Highway speed scaling (if speed > 30 km/h)
+      if (speedKmh > 30) {
+        if (cfg.vehicleType === "AC_CAB") congestionPercentage = 0;
+        else if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 10;
+        else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 4.5;
+      }
     }
 
     const congestionCharge = congestionPercentage > 0

@@ -187,7 +187,7 @@ compareRouter.get("/compare", async (req: Request, res: Response) => {
 
   const customSurge = customSurgeStr ? parseFloat(customSurgeStr) : undefined;
   const toAirport = isAirport(pickupLat, pickupLng) || isAirport(dropLat, dropLng);
-  let nammaYatriEstimates = calculateNammaYatriFares(route.distanceKm, route.durationMin, forceNight);
+  let nammaYatriEstimates = calculateNammaYatriFares(route.distanceKm, route.durationMin, forceNight, customSurge);
   let uberEstimates = calculateUberFares(route.distanceKm, route.durationMin, customSurge);
   let olaEstimates = calculateOlaFares(route.distanceKm, route.durationMin, customSurge, toAirport);
   let rapidoEstimates = calculateRapidoFares(route.distanceKm, route.durationMin, customSurge);
