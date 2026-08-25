@@ -76,7 +76,7 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     minDistanceKm: 4,
     slab1Rate: 23, // ₹23/km
     slab1EndKm: 10, // slab 1 ends at 10km
-    slab2Rate: 18.00, // ₹18.00/km after 10km (calibrated for long distance)
+    slab2Rate: 18.40, // ₹18.40/km after 10km (official rate)
     pickupCharge: 30, // ₹30 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
@@ -91,7 +91,7 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     minDistanceKm: 4,
     slab1Rate: 23,
     slab1EndKm: 10,
-    slab2Rate: 18.00, // ₹18.00/km after 10km (calibrated for long distance)
+    slab2Rate: 18.40, // ₹18.40/km after 10km (official rate)
     pickupCharge: 30,
     driverAdditions: 0,
     priorityTip: 0,
