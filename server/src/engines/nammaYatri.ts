@@ -194,13 +194,19 @@ export function calculateNammaYatriFares(
     }
 
     // Congestion Surcharge:
-    // - If surgeMultiplier is 1.0, congestion charge is 0
-    // - If surgeMultiplier > 1.0, scale the baseline congestion charge by the multiplier
+    // - For Non-AC Cab: congestion is 0 at 1.0x surge, and scales with surgeMultiplier
+    // - For other cabs/autos: apply baseline congestion charge at 1.0x surge, and scale with surgeMultiplier
     let congestionPercentage = cfg.congestionPercentage || 0;
-    if (surgeMultiplier <= 1.0) {
-      congestionPercentage = 0;
+    if (cfg.vehicleType === "NON_AC_CAB") {
+      if (surgeMultiplier <= 1.0) {
+        congestionPercentage = 0;
+      } else {
+        congestionPercentage = Math.round(congestionPercentage * surgeMultiplier);
+      }
     } else {
-      congestionPercentage = Math.round(congestionPercentage * surgeMultiplier);
+      if (surgeMultiplier > 1.0) {
+        congestionPercentage = Math.round(congestionPercentage * surgeMultiplier);
+      }
       
       // Highway speed scaling (if speed > 30 km/h)
       if (speedKmh > 30) {
