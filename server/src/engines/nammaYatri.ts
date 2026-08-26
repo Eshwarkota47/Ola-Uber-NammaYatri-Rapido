@@ -104,13 +104,13 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     capacity: 6,
     minFare: 130, // Calibrated from Namma Yatri screenshot
     minDistanceKm: 4,
-    slab1Rate: 30, // ₹30/km
-    slab1EndKm: 10,
-    slab2Rate: 25, // ₹25/km after 10km (calibrated from screenshot)
-    pickupCharge: 40,
+    slab1Rate: 30, // ₹30/km flat
+    slab1EndKm: null,
+    slab2Rate: null,
+    pickupCharge: 50, // ₹50 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 15, // 15% congestion charge
+    congestionPercentage: 5, // 5% congestion charge
   },
   {
     vehicleType: "XL_PREMIUM",
@@ -119,13 +119,13 @@ export const EXACT_NAMMA_YATRI_RATES: NammaYatriRateCard[] = [
     capacity: 6,
     minFare: 150, // Calibrated from screenshot
     minDistanceKm: 4,
-    slab1Rate: 36, // ₹36/km for first 10km
-    slab1EndKm: 10,
-    slab2Rate: 29.40, // ₹29.40/km after 10km (calibrated for long distance)
-    pickupCharge: 60,
+    slab1Rate: 36, // ₹36/km flat
+    slab1EndKm: null,
+    slab2Rate: null,
+    pickupCharge: 70, // ₹70 pickup charge
     driverAdditions: 0,
     priorityTip: 0,
-    congestionPercentage: 0, // No congestion charge
+    congestionPercentage: 10, // 10% congestion charge
   },
 ];
 
@@ -212,7 +212,8 @@ export function calculateNammaYatriFares(
       if (speedKmh > 30) {
         if (cfg.vehicleType === "AC_CAB") congestionPercentage = 0;
         else if (cfg.vehicleType === "SEDAN_PREMIUM") congestionPercentage = 10;
-        else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 4.5;
+        else if (cfg.vehicleType === "XL_CAB") congestionPercentage = 0;
+        else if (cfg.vehicleType === "XL_PREMIUM") congestionPercentage = 0;
       }
     }
 
