@@ -192,7 +192,7 @@ export function calculateOlaFares(
     const baseFare = cfg.baseFare;
     
     // Determine the rate per km based on route type (Airport vs standard)
-    let ratePerKm = distanceKm > 18 ? cfg.longTripPerKmRate : cfg.regularPerKmRate;
+    let ratePerKm = cfg.regularPerKmRate;
     if (isAirportRoute) {
       if (cfg.id === "mini-non-ac") ratePerKm = 15.00;
       else if (cfg.id === "mini" || cfg.id === "priority") ratePerKm = 15.30;
